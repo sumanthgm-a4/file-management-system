@@ -536,3 +536,8 @@ File Data ---> MinIO
 This separation of responsibilities is the same pattern commonly used with Amazon S3 in production systems.
 
 ---
+
+### Docker compose setup for MinIO (for object storage) + Postgres (for metadata storage):
+Refer to this [docker-compose file](databases-compose.yaml).
+
+---
