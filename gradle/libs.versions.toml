@@ -1,0 +1,88 @@
+[versions]
+
+lombok = "1.18.42"
+springdoc = "2.8.9"
+mapstruct = "1.6.3"
+jjwt = "0.12.7"
+
+[libraries]
+
+# Core
+
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+# Spring Boot Starters
+
+spring-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+
+spring-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux" }
+
+spring-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+
+spring-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+
+spring-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
+
+spring-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+
+spring-mongodb = { module = "org.springframework.boot:spring-boot-starter-data-mongodb" }
+
+spring-cassandra = { module = "org.springframework.boot:spring-boot-starter-data-cassandra" }
+
+spring-redis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
+
+spring-cache = { module = "org.springframework.boot:spring-boot-starter-cache" }
+
+spring-batch = { module = "org.springframework.boot:spring-boot-starter-batch" }
+
+spring-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+
+spring-aop = { module = "org.springframework.boot:spring-boot-starter-aop" }
+
+spring-websocket = { module = "org.springframework.boot:spring-boot-starter-websocket" }
+
+spring-graphql = { module = "org.springframework.boot:spring-boot-starter-graphql" }
+
+spring-rsocket = { module = "org.springframework.boot:spring-boot-starter-rsocket" }
+
+spring-oauth2-client = { module = "org.springframework.boot:spring-boot-starter-oauth2-client" }
+
+spring-oauth2-resource-server = { module = "org.springframework.boot:spring-boot-starter-oauth2-resource-server" }
+
+# Kafka
+
+spring-kafka = { module = "org.springframework.kafka:spring-kafka" }
+
+# Spring Cloud
+
+spring-cloud-stream = { module = "org.springframework.cloud:spring-cloud-stream" }
+
+spring-cloud-stream-kafka = { module = "org.springframework.cloud:spring-cloud-stream-binder-kafka" }
+
+openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
+
+# Database Drivers
+
+postgres = { module = "org.postgresql:postgresql" }
+
+mysql = { module = "com.mysql:mysql-connector-j" }
+
+mariadb = { module = "org.mariadb.jdbc:mariadb-java-client" }
+
+# Documentation
+
+springdoc = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+
+# Mapping
+
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+
+# JWT
+
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }

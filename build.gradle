@@ -1,0 +1,76 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.14'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.sum'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2025.0.0")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+dependencies {
+
+	// Base dependencies for every service
+
+	implementation libs.spring.web
+	implementation libs.spring.validation
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	testCompileOnly libs.lombok
+	testAnnotationProcessor libs.lombok
+
+	// Uncomment when needed
+
+	// implementation libs.spring.security
+
+	// implementation libs.spring.jpa
+	// runtimeOnly libs.postgres
+
+	// implementation libs.spring.mongodb
+
+	// implementation libs.spring.redis
+
+	// implementation libs.spring.kafka
+
+	// implementation libs.spring.cloud.stream
+	// implementation libs.spring.cloud.stream.kafka
+
+	// implementation libs.openfeign
+
+	// implementation libs.springdoc
+
+	// implementation libs.mapstruct
+	// annotationProcessor libs.mapstruct.processor
+
+	// implementation libs.jjwt.api
+	// runtimeOnly libs.jjwt.impl
+	// runtimeOnly libs.jjwt.jackson
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
