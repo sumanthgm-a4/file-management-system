@@ -34,6 +34,9 @@ dependencies {
 	implementation libs.spring.web
 	implementation libs.spring.validation
 
+	// MinIO SDK
+	implementation("io.minio:minio:8.5.17")
+
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
@@ -47,8 +50,8 @@ dependencies {
 
 	// implementation libs.spring.security
 
-	// implementation libs.spring.jpa
-	// runtimeOnly libs.postgres
+	implementation libs.spring.jpa
+	runtimeOnly libs.postgres
 
 	// implementation libs.spring.mongodb
 

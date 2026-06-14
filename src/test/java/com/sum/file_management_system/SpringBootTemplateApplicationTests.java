@@ -1,4 +1,4 @@
-package com.sum.spring_boot_template;
+package com.sum.file_management_system;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
