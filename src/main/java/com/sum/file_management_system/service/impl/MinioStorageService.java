@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sum.file_management_system.dto.UploadRequest;
 import com.sum.file_management_system.entity.Document;
 import com.sum.file_management_system.repository.DocumentRepository;
 import com.sum.file_management_system.service.StorageService;
@@ -36,33 +37,42 @@ public class MinioStorageService implements StorageService {
 
     @Override
     @Transactional
-    public String upload(MultipartFile file) {
+    public String upload(UploadRequest request) {
                 
         try {
             String objectKey = UUID.randomUUID()
             + "-"
-            + file.getOriginalFilename();
+            + request.getFileName();
 
             Document document = new Document();
-            document.setFileName(file.getOriginalFilename());
+            document.setFileName(request.getFileName());
             document.setObjectKey(objectKey);
-            document.setSize(file.getSize());
+            // document.setSize(file.getSize());
 
             documentRepository.save(document);
 
-            minioClient.putObject(
-                PutObjectArgs.builder()
+            // minioClient.putObject(
+            //     PutObjectArgs.builder()
+            //         .bucket(bucket)
+            //         .object(objectKey)
+            //         .stream(
+            //             file.getInputStream(),
+            //             file.getSize(),
+            //             -1
+            //         )
+            //         .build()
+            // );
+
+            String url = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
                     .bucket(bucket)
                     .object(objectKey)
-                    .stream(
-                        file.getInputStream(),
-                        file.getSize(),
-                        -1
-                    )
+                    .method(Method.PUT)
+                    .expiry(10, TimeUnit.MINUTES)
                     .build()
             );
 
-            return objectKey;
+            return url;
 
         } catch (Exception e) {
             // TODO Auto-generated catch block

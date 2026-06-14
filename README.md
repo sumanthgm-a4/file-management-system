@@ -541,3 +541,212 @@ This separation of responsibilities is the same pattern commonly used with Amazo
 Refer to this [docker-compose file](databases-compose.yaml).
 
 ---
+
+## Current Iteration: Direct-to-Object-Store Uploads
+
+The previous implementation uploaded files through Spring Boot:
+
+```text
+Client
+  |
+  v
+Spring Boot
+  |
+  v
+MinIO
+```
+
+While simple, this approach forces the application server to handle every byte of every uploaded file.
+
+For large files, this becomes inefficient because:
+
+* Application memory usage increases
+* Network bandwidth is consumed twice
+* Upload throughput is limited by the backend service
+* Spring Boot becomes a bottleneck
+
+To address this, the current iteration uses **presigned upload URLs**.
+
+---
+
+## Upload Flow
+
+Instead of sending the file itself to Spring Boot, the client first requests permission to upload.
+
+### Step 1: Request Upload Permission
+
+The client sends metadata such as:
+
+```json
+{
+  "fileName": "resume.pdf"
+}
+```
+
+Spring Boot:
+
+* Generates a unique object key
+* Creates a presigned upload URL
+* Stores initial metadata if needed
+* Returns the upload URL to the client
+
+### Step 2: Upload Directly to MinIO
+
+The client uploads the file directly to MinIO using the returned URL.
+
+### Step 3: Upload Completes
+
+MinIO stores the object without the file bytes ever passing through Spring Boot.
+
+---
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant SpringBoot
+    participant MinIO
+
+    Client->>SpringBoot: Request upload URL (fileName)
+    SpringBoot->>MinIO: Generate presigned upload URL
+    SpringBoot-->>Client: Return upload URL
+
+    Client->>MinIO: Upload file directly
+    MinIO-->>Client: Upload successful
+```
+
+---
+
+## Presigned Upload URLs
+
+A presigned upload URL is a temporary, cryptographically signed URL that grants permission to upload a specific object.
+
+Example:
+
+```text
+https://minio.example.com/documents/7b1f9f43-resume.pdf?...signature...
+```
+
+The client can upload the file directly to this URL without knowing:
+
+* MinIO credentials
+* Access keys
+* Secret keys
+
+---
+
+## Idempotency
+
+Upload URL generation is designed to be idempotent.
+
+This means that repeated requests for the same upload operation should not create duplicate objects or inconsistent state.
+
+Conceptually:
+
+```mermaid
+flowchart TD
+    A[Client Requests Upload URL]
+    B[Generate Object Key]
+    C[Return Existing Upload Session]
+    D[Return Upload URL]
+
+    A --> B
+    B --> C
+    C --> D
+```
+
+The goal is that retries caused by network failures do not accidentally create multiple uploads for the same intended file.
+
+---
+
+## Upload URL Lifetime and Usage
+
+Presigned upload URLs are temporary URLs that grant permission to upload to a specific object key.
+
+Characteristics:
+
+* Scoped to a specific bucket
+* Scoped to a specific object key
+* Valid only for a limited duration
+* Generated for a specific upload session
+
+A common misconception is that presigned upload URLs are inherently single-use.
+
+In reality, MinIO (and Amazon S3) enforce expiration, but they do not automatically enforce one-time usage.
+
+Instead, the application treats each presigned URL as belonging to a single upload session.
+
+```mermaid
+flowchart TD
+    A[Request Upload URL]
+    B[Generate Upload Session]
+    C[Generate Presigned URL]
+    D[Upload Object]
+
+    A --> B
+    B --> C
+    C --> D
+```
+
+This allows the application to:
+
+* Associate uploads with business entities
+* Prevent duplicate records
+* Track upload progress
+* Implement upload lifecycle management
+
+As the system evolves, upload sessions will become the source of truth rather than the presigned URL itself.
+
+---
+
+## Metadata Management
+
+Since Spring Boot no longer receives the uploaded file directly, it cannot obtain information such as:
+
+* Actual file size
+* Content type
+* Upload completion status
+
+from the incoming request itself.
+
+Instead, metadata is now obtained from the object stored in MinIO after upload completion.
+
+This ensures that metadata reflects the actual stored object rather than what the client claimed during upload initiation.
+
+---
+
+## Benefits of Direct Uploads
+
+```mermaid
+flowchart LR
+    Client --> MinIO
+
+    SpringBoot -. Control Plane .-> Client
+    SpringBoot -. Metadata .-> MinIO
+```
+
+Spring Boot becomes a control plane responsible for:
+
+* Authorizing uploads
+* Generating presigned URLs
+* Managing metadata
+* Managing object lifecycle
+
+MinIO becomes responsible for:
+
+* Receiving file bytes
+* Storing objects
+* Serving downloads
+
+This architecture closely resembles how large-scale systems use Amazon S3 in production.
+
+---
+
+## Future Enhancements
+
+The following capabilities will be added once event-driven processing is introduced through **Kafka**:
+
+* Upload status tracking (`PENDING`, `DONE`)
+* Automatic file size population from the uploaded object
+* Additional post-upload metadata processing
