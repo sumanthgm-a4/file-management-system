@@ -102,8 +102,10 @@ public class MinioStorageService implements StorageService {
     @Transactional
     public String delete(String objectKey) {
         try {
-            documentRepository.findByObjectKey(objectKey)
+            Document document = documentRepository.findByObjectKey(objectKey)
                 .orElseThrow(() -> new RuntimeException("Object doesn't exist"));
+
+            documentRepository.delete(document);
 
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
