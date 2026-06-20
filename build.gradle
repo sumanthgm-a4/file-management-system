@@ -57,7 +57,7 @@ dependencies {
 
 	// implementation libs.spring.redis
 
-	// implementation libs.spring.kafka
+	implementation libs.spring.kafka
 
 	// implementation libs.spring.cloud.stream
 	// implementation libs.spring.cloud.stream.kafka

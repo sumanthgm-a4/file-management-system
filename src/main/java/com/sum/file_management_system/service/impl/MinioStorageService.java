@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sum.file_management_system.dto.UploadRequest;
 import com.sum.file_management_system.entity.Document;
+import com.sum.file_management_system.entity.UploadStatus;
 import com.sum.file_management_system.repository.DocumentRepository;
 import com.sum.file_management_system.service.StorageService;
 
@@ -24,7 +25,9 @@ import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MinioStorageService implements StorageService {
@@ -40,16 +43,31 @@ public class MinioStorageService implements StorageService {
     public String upload(UploadRequest request) {
                 
         try {
-            String objectKey = UUID.randomUUID()
-            + "-"
-            + request.getFileName();
+            // String objectKey = UUID.randomUUID()
+            // + "-"
+            // + request.getFileName();
+
+            // Using exact <folder-name>/<file-name> as objectKey
+            // instead of random UUID
+            String objectKey = request.getFileName();
+
+            String url = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .bucket(bucket)
+                    .object(objectKey)
+                    .method(Method.PUT)
+                    .expiry(10, TimeUnit.MINUTES)
+                    .build()
+            );
 
             Document document = new Document();
             document.setFileName(request.getFileName());
-            document.setObjectKey(objectKey);
+            document.setObjectKey(bucket + "/" + objectKey);
             // document.setSize(file.getSize());
+            document.setUploadStatus(UploadStatus.PENDING);
 
             documentRepository.save(document);
+            log.info("Object is uploading...");
 
             // minioClient.putObject(
             //     PutObjectArgs.builder()
@@ -63,23 +81,11 @@ public class MinioStorageService implements StorageService {
             //         .build()
             // );
 
-            String url = minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .bucket(bucket)
-                    .object(objectKey)
-                    .method(Method.PUT)
-                    .expiry(10, TimeUnit.MINUTES)
-                    .build()
-            );
-
             return url;
 
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException("Upload has failed : " + e.getMessage());
         }
-
-        return "";
     }
 
     @Override
@@ -101,21 +107,18 @@ public class MinioStorageService implements StorageService {
 
             return url;
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException("Fetching the presigned download URL has failed : " + e.getMessage());
         }
-
-        return "";
     }
 
     @Override
     @Transactional
     public String delete(String objectKey) {
         try {
-            Document document = documentRepository.findByObjectKey(objectKey)
-                .orElseThrow(() -> new RuntimeException("Object doesn't exist"));
+            // Document document = documentRepository.findByObjectKey(bucket + "/" + objectKey)
+            //     .orElseThrow(() -> new RuntimeException("Object doesn't exist"));
 
-            documentRepository.delete(document);
+            // documentRepository.delete(document);
 
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
@@ -126,10 +129,8 @@ public class MinioStorageService implements StorageService {
 
             return "Object deleted successfully";
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Object deletion is unsucccessful : " + e.getMessage());
         }
-
-        return "Object deletion is unsuccessful";
     }
 
 }
